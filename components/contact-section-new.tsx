@@ -9,24 +9,6 @@ interface ContactSectionProps {
   data?: typeof contactData
 }
 
-function splitEmailForReveal(email: string) {
-  const at = email.indexOf('@')
-  if (at === -1) {
-    return { head: email, mid: '', domain: '' as string }
-  }
-  const local = email.slice(0, at)
-  const domain = email.slice(at)
-  if (local.length <= 5) {
-    return { head: local, mid: '', domain }
-  }
-  const headLen = Math.max(4, Math.floor(local.length * 0.38))
-  return {
-    head: local.slice(0, headLen),
-    mid: local.slice(headLen),
-    domain,
-  }
-}
-
 function openMailto(to: string, name: string, fromEmail: string, message: string) {
   const params = new URLSearchParams({
     subject: `Portfolio contact from ${name}`,
@@ -43,7 +25,6 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
   })
   const [submitting, setSubmitting] = useState(false)
 
-  const { head, mid, domain } = splitEmailForReveal(data.email)
   const web3formsKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,18 +95,9 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
               href={`mailto:${data.email}`}
               title={data.email}
               aria-label={`Email ${data.email}`}
-              className="group/email inline-flex max-w-full items-baseline text-sm md:text-base text-foreground hover:text-accent transition-colors font-medium cursor-pointer"
+              className="inline-flex max-w-full items-baseline text-sm md:text-base text-foreground hover:text-accent transition-colors font-medium cursor-pointer break-all"
             >
-              <span className="shrink-0">{head}</span>
-              {mid ? (
-                <span
-                  className="inline-block overflow-hidden align-baseline transition-[max-width] duration-700 ease-out motion-reduce:transition-none max-w-0 opacity-90 group-hover/email:max-w-[min(100%,14rem)] group-hover/email:opacity-100 group-focus-visible/email:max-w-[min(100%,14rem)] group-focus-visible/email:opacity-100"
-                  aria-hidden
-                >
-                  <span className="inline-block whitespace-nowrap">{mid}</span>
-                </span>
-              ) : null}
-              <span className="shrink-0">{domain}</span>
+              {data.email}
             </a>
           </div>
         </div>
