@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 
 type Project = (typeof portfolioData.projects)[number]
+type Certification = (typeof portfolioData.certifications)[number]
 
 interface PortfolioSectionProps {
   data?: typeof portfolioData
@@ -19,6 +20,7 @@ interface PortfolioSectionProps {
 export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps) {
   const [activeFilter, setActiveFilter] = useState('All')
   const [selected, setSelected] = useState<Project | null>(null)
+  const [selectedCert, setSelectedCert] = useState<Certification | null>(null)
 
   const projectCategories = (project: Project) => {
     const anyProject = project as unknown as { categories?: unknown; category?: unknown }
@@ -38,10 +40,21 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
     setSelected(project)
   }
 
+  const openCert = (cert: Certification) => {
+    setSelectedCert(cert)
+  }
+
   const handleCardKeyDown = (e: React.KeyboardEvent, project: Project) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       openProject(project)
+    }
+  }
+
+  const handleCertKeyDown = (e: React.KeyboardEvent, cert: Certification) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openCert(cert)
     }
   }
 
@@ -163,6 +176,96 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
           )}
         </DialogContent>
       </Dialog>
+
+      <div className="pt-2 md:pt-4 space-y-4 md:space-y-6">
+        <div>
+          <h3 className="text-xl md:text-2xl font-bold text-foreground">Licenses & Certifications</h3>
+          <div className="w-10 h-1 bg-accent rounded-full mt-4" />
+        </div>
+
+        {data.certifications.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {data.certifications.map((cert, index) => (
+              <div
+                key={`${cert.title ?? 'cert'}-${index}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => openCert(cert)}
+                onKeyDown={(e) => handleCertKeyDown(e, cert)}
+                className="group relative bg-secondary rounded-xl md:rounded-2xl border border-border overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                aria-label={`View certification: ${cert.title ?? 'Certification'}`}
+              >
+                <div className="aspect-[4/3] overflow-hidden bg-background">
+                  <img
+                    src={cert.image || '/placeholder.svg'}
+                    alt=""
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-background/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4 md:p-6 pointer-events-none">
+                  <h4 className="text-lg md:text-xl font-bold text-foreground transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    {cert.title ?? 'Certification'}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                    Click to view full details
+                  </p>
+                </div>
+
+                {cert.issuer ? (
+                  <div className="absolute top-3 right-3 md:top-4 md:right-4 px-2.5 md:px-3 py-1 md:py-1.5 bg-background/90 backdrop-blur-sm border border-border rounded-lg text-xs font-medium text-accent pointer-events-none">
+                    {cert.issuer}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl md:rounded-2xl border border-border bg-secondary p-5 md:p-6 text-sm md:text-base text-muted-foreground">
+            Add your licenses/certifications to show them here.
+          </div>
+        )}
+
+        <Dialog open={selectedCert !== null} onOpenChange={(open) => !open && setSelectedCert(null)}>
+          <DialogContent
+            className="max-h-[min(90vh,calc(100%-2rem))] overflow-y-auto sm:max-w-2xl gap-0 p-0 border-border"
+            showCloseButton
+          >
+            {selectedCert && (
+              <>
+                <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
+                  <img
+                    src={selectedCert.image || '/placeholder.svg'}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                  {selectedCert.issuer ? (
+                    <div className="absolute top-3 right-12 md:right-14">
+                      <span className="inline-block rounded-lg border border-border bg-background/95 px-3 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
+                        {selectedCert.issuer}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="space-y-4 p-6 pt-5">
+                  <DialogHeader className="gap-2 text-left space-y-2">
+                    <DialogTitle className="text-xl md:text-2xl font-bold leading-tight pr-8">
+                      {selectedCert.title}
+                    </DialogTitle>
+                    {selectedCert.description ? (
+                      <DialogDescription asChild>
+                        <p className="text-base leading-relaxed text-muted-foreground">
+                          {selectedCert.description}
+                        </p>
+                      </DialogDescription>
+                    ) : null}
+                  </DialogHeader>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   )
 }

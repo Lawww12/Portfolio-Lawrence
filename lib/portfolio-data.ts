@@ -163,6 +163,27 @@ export const portfolioData = {
       tech: ['Figma', 'Dribbble'],
     },
   ],
+  certifications: [
+    {
+      title: 'Digital Forensics in Action: Investigating a Real Cybercrime Case',
+      issuer: 'Xaltius (Nov 2025)',
+      image: '',
+      description:
+        'Completed a practical cybercrime investigation simulation focused on evidence collection, incident timeline reconstruction, and forensic analysis workflows.',
+    },
+    {
+      title: 'Embracing GenAI Cybersecurity - Learn how attackers use GenAI',
+      issuer: 'Xaltius (Jan 2026)',
+      image: '',
+      description:
+        'Studied how threat actors leverage generative AI for modern attacks and explored defensive strategies to detect, mitigate, and respond to AI-assisted threats.',
+    },
+  ] as Array<{
+    title: string
+    issuer?: string
+    image?: string
+    description?: string
+  }>,
 }
 
 export const blogData = {
