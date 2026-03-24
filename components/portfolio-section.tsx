@@ -20,10 +20,19 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
   const [activeFilter, setActiveFilter] = useState('All')
   const [selected, setSelected] = useState<Project | null>(null)
 
+  const projectCategories = (project: Project) => {
+    const anyProject = project as unknown as { categories?: unknown; category?: unknown }
+    if (Array.isArray(anyProject.categories)) {
+      return anyProject.categories.filter((c): c is string => typeof c === 'string')
+    }
+    if (typeof anyProject.category === 'string') return [anyProject.category]
+    return []
+  }
+
   const filteredProjects =
     activeFilter === 'All'
       ? data.projects
-      : data.projects.filter((p) => p.category === activeFilter)
+      : data.projects.filter((p) => projectCategories(p).includes(activeFilter))
 
   const openProject = (project: Project) => {
     setSelected(project)
@@ -89,7 +98,7 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
             </div>
 
             <div className="absolute top-3 right-3 md:top-4 md:right-4 px-2.5 md:px-3 py-1 md:py-1.5 bg-background/90 backdrop-blur-sm border border-border rounded-lg text-xs font-medium text-accent capitalize pointer-events-none">
-              {project.category}
+              {projectCategories(project)[0] ?? 'Project'}
             </div>
           </div>
         ))}
@@ -109,9 +118,16 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute top-3 right-12 md:right-14">
-                  <span className="inline-block rounded-lg border border-border bg-background/95 px-3 py-1.5 text-xs font-medium capitalize text-accent backdrop-blur-sm">
-                    {selected.category}
-                  </span>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {projectCategories(selected).map((cat) => (
+                      <span
+                        key={cat}
+                        className="inline-block rounded-lg border border-border bg-background/95 px-3 py-1.5 text-xs font-medium capitalize text-accent backdrop-blur-sm"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="space-y-4 p-6 pt-5">

@@ -99,7 +99,16 @@ export const resumeData = {
 }
 
 export const portfolioData = {
-  categories: ['All', 'Web Design', 'Network Architecture / Cybersecurity', 'Information Assurance', 'Network Engineering'],
+  categories: [
+    'All',
+    'Web Design',
+    'Network Architecture / Cybersecurity',
+    'Information Assurance',
+    'Network Engineering',
+    'Web development',
+    'UI/UX Design',
+    'UI/UX Case Study',
+  ],
   projects: [
     {
       title: 'Company Website',
@@ -128,6 +137,30 @@ export const portfolioData = {
       image: '/portfolio-network-infrastructure.jpg',
       description: 'Improved existing network performance while integrating additional security layers to protect sensitive operations.',
       tech: ['Network Analysis Tools', 'Firewall Tuning', 'Load Balancing'],
+    },
+    {
+      title: 'Smart Personal Assistant – Web Application',
+      categories: ['Web development'],
+      image: '',
+      description:
+        'Developed a task and reminder management web application with structured database schema and dynamic DOM manipulation to improve user interaction.',
+      tech: ['HTML', 'CSS', 'JavaScript', 'SQL'],
+    },
+    {
+      title: 'MakeCents – Web-Based Expense Tracker',
+      categories: ['Web development'],
+      image: '',
+      description:
+        'Built a budgeting system that records and categorizes expenses, utilizing relational database design and SQL queries to generate spending insights.',
+      tech: ['HTML', 'CSS', 'JavaScript', 'SQL'],
+    },
+    {
+      title: 'AquaSwift – Smart Hydration System Concept',
+      categories: ['UI/UX Design', 'UI/UX Case Study'],
+      image: '',
+      description:
+        'Designed the system architecture and prototype interface for an automated hydration system, applying system analysis and workflow modeling.',
+      tech: ['Figma', 'Dribbble'],
     },
   ],
 }
