@@ -1,11 +1,38 @@
 'use client'
 
-import { Mail, Phone, MapPin, Send } from 'lucide-react'
+import { Mail, Phone, MapPin, Send, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { contactData } from '@/lib/portfolio-data'
 
 interface ContactSectionProps {
   data?: typeof contactData
+}
+
+function splitEmailForReveal(email: string) {
+  const at = email.indexOf('@')
+  if (at === -1) {
+    return { head: email, mid: '', domain: '' as string }
+  }
+  const local = email.slice(0, at)
+  const domain = email.slice(at)
+  if (local.length <= 5) {
+    return { head: local, mid: '', domain }
+  }
+  const headLen = Math.max(4, Math.floor(local.length * 0.38))
+  return {
+    head: local.slice(0, headLen),
+    mid: local.slice(headLen),
+    domain,
+  }
+}
+
+function openMailto(to: string, name: string, fromEmail: string, message: string) {
+  const params = new URLSearchParams({
+    subject: `Portfolio contact from ${name}`,
+    body: `From: ${name} <${fromEmail}>\n\n${message}`,
+  })
+  window.location.href = `mailto:${encodeURIComponent(to)}?${params.toString()}`
 }
 
 export function ContactSection({ data = contactData }: ContactSectionProps) {
@@ -14,11 +41,48 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
     email: '',
     message: '',
   })
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { head, mid, domain } = splitEmailForReveal(data.email)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Form submitted:', formData)
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (res.status === 503) {
+        openMailto(data.email, formData.name, formData.email, formData.message)
+        toast.info('Opened your email app', {
+          description:
+            'Add WEB3FORMS_ACCESS_KEY to .env for direct delivery from the site. See api/contact route.',
+        })
+        setFormData({ name: '', email: '', message: '' })
+        return
+      }
+
+      const payload = (await res.json()) as { ok?: boolean; error?: string }
+
+      if (!res.ok) {
+        toast.error(payload.error ?? 'Something went wrong')
+        return
+      }
+
+      toast.success('Message sent', {
+        description: 'Thanks — you should hear back soon.',
+      })
+      setFormData({ name: '', email: '', message: '' })
+    } catch {
+      toast.error('Network error', {
+        description: 'Check your connection and try again.',
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -33,13 +97,24 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
           <div className="w-12 h-12 md:w-14 md:h-14 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
             <Mail className="w-5 h-5 md:w-6 md:h-6 text-accent" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Email</h3>
             <a
               href={`mailto:${data.email}`}
-              className="text-sm md:text-base text-foreground hover:text-accent transition-colors font-medium truncate block"
+              title={data.email}
+              aria-label={`Email ${data.email}`}
+              className="group/email inline-flex max-w-full items-baseline text-sm md:text-base text-foreground hover:text-accent transition-colors font-medium cursor-pointer"
             >
-              {data.email}
+              <span className="shrink-0">{head}</span>
+              {mid ? (
+                <span
+                  className="inline-block overflow-hidden align-baseline transition-[max-width] duration-700 ease-out motion-reduce:transition-none max-w-0 opacity-90 group-hover/email:max-w-[min(100%,14rem)] group-hover/email:opacity-100 group-focus-visible/email:max-w-[min(100%,14rem)] group-focus-visible/email:opacity-100"
+                  aria-hidden
+                >
+                  <span className="inline-block whitespace-nowrap">{mid}</span>
+                </span>
+              ) : null}
+              <span className="shrink-0">{domain}</span>
             </a>
           </div>
         </div>
@@ -84,6 +159,7 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
               className="w-full px-4 md:px-5 py-3 md:py-3.5 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all text-sm md:text-base"
               placeholder="Your name"
               required
+              disabled={submitting}
             />
           </div>
           <div>
@@ -98,6 +174,7 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
               className="w-full px-4 md:px-5 py-3 md:py-3.5 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all text-sm md:text-base"
               placeholder="john@example.com"
               required
+              disabled={submitting}
             />
           </div>
         </div>
@@ -114,15 +191,21 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
             className="w-full px-4 md:px-5 py-3 md:py-3.5 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all resize-none text-sm md:text-base"
             placeholder="Write your message here..."
             required
+            disabled={submitting}
           />
         </div>
 
         <button
           type="submit"
-          className="flex items-center justify-center gap-2 w-full md:w-auto px-6 md:px-8 py-3 md:py-3.5 bg-accent text-accent-foreground rounded-xl font-medium hover:shadow-lg hover:shadow-accent/20 hover:-translate-y-0.5 transition-all text-sm md:text-base"
+          disabled={submitting}
+          className="flex items-center justify-center gap-2 w-full md:w-auto px-6 md:px-8 py-3 md:py-3.5 bg-accent text-accent-foreground rounded-xl font-medium hover:shadow-lg hover:shadow-accent/20 hover:-translate-y-0.5 transition-all text-sm md:text-base disabled:opacity-60 disabled:pointer-events-none disabled:hover:translate-y-0"
         >
-          <Send className="w-4 h-4" />
-          Send Message
+          {submitting ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+          ) : (
+            <Send className="w-4 h-4" aria-hidden />
+          )}
+          {submitting ? 'Sending…' : 'Send Message'}
         </button>
       </form>
     </div>
