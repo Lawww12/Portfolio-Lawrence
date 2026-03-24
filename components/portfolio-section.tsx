@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { portfolioData } from '@/lib/portfolio-data'
+import { Award } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,6 @@ interface PortfolioSectionProps {
 export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps) {
   const [activeFilter, setActiveFilter] = useState('All')
   const [selected, setSelected] = useState<Project | null>(null)
-  const [selectedCert, setSelectedCert] = useState<Certification | null>(null)
 
   const projectCategories = (project: Project) => {
     const anyProject = project as unknown as { categories?: unknown; category?: unknown }
@@ -40,21 +40,10 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
     setSelected(project)
   }
 
-  const openCert = (cert: Certification) => {
-    setSelectedCert(cert)
-  }
-
   const handleCardKeyDown = (e: React.KeyboardEvent, project: Project) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       openProject(project)
-    }
-  }
-
-  const handleCertKeyDown = (e: React.KeyboardEvent, cert: Certification) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      openCert(cert)
     }
   }
 
@@ -184,39 +173,28 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
         </div>
 
         {data.certifications.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {data.certifications.map((cert, index) => (
               <div
                 key={`${cert.title ?? 'cert'}-${index}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => openCert(cert)}
-                onKeyDown={(e) => handleCertKeyDown(e, cert)}
-                className="group relative bg-secondary rounded-xl md:rounded-2xl border border-border overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-xl hover:shadow-accent/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                aria-label={`View certification: ${cert.title ?? 'Certification'}`}
+                className="flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-secondary rounded-xl md:rounded-2xl border border-border hover:border-accent transition-colors group"
               >
-                <div className="aspect-[4/3] overflow-hidden bg-background">
-                  <img
-                    src={cert.image || '/placeholder.svg'}
-                    alt=""
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
+                  <Award className="w-5 h-5 md:w-6 md:h-6 text-accent" />
                 </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-background/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4 md:p-6 pointer-events-none">
-                  <h4 className="text-lg md:text-xl font-bold text-foreground transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                    {cert.title ?? 'Certification'}
+                <div className="min-w-0">
+                  <h4 className="text-sm md:text-base font-semibold text-foreground leading-snug">
+                    {cert.title}
                   </h4>
-                  <p className="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
-                    Click to view full details
-                  </p>
+                  {cert.issuer ? (
+                    <p className="text-xs md:text-sm text-accent mt-1 font-medium">{cert.issuer}</p>
+                  ) : null}
+                  {cert.description ? (
+                    <p className="text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed">
+                      {cert.description}
+                    </p>
+                  ) : null}
                 </div>
-
-                {cert.issuer ? (
-                  <div className="absolute top-3 right-3 md:top-4 md:right-4 px-2.5 md:px-3 py-1 md:py-1.5 bg-background/90 backdrop-blur-sm border border-border rounded-lg text-xs font-medium text-accent pointer-events-none">
-                    {cert.issuer}
-                  </div>
-                ) : null}
               </div>
             ))}
           </div>
@@ -226,45 +204,6 @@ export function PortfolioSection({ data = portfolioData }: PortfolioSectionProps
           </div>
         )}
 
-        <Dialog open={selectedCert !== null} onOpenChange={(open) => !open && setSelectedCert(null)}>
-          <DialogContent
-            className="max-h-[min(90vh,calc(100%-2rem))] overflow-y-auto sm:max-w-2xl gap-0 p-0 border-border"
-            showCloseButton
-          >
-            {selectedCert && (
-              <>
-                <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
-                  <img
-                    src={selectedCert.image || '/placeholder.svg'}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                  {selectedCert.issuer ? (
-                    <div className="absolute top-3 right-12 md:right-14">
-                      <span className="inline-block rounded-lg border border-border bg-background/95 px-3 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
-                        {selectedCert.issuer}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="space-y-4 p-6 pt-5">
-                  <DialogHeader className="gap-2 text-left space-y-2">
-                    <DialogTitle className="text-xl md:text-2xl font-bold leading-tight pr-8">
-                      {selectedCert.title}
-                    </DialogTitle>
-                    {selectedCert.description ? (
-                      <DialogDescription asChild>
-                        <p className="text-base leading-relaxed text-muted-foreground">
-                          {selectedCert.description}
-                        </p>
-                      </DialogDescription>
-                    ) : null}
-                  </DialogHeader>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   )
