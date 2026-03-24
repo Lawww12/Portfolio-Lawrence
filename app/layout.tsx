@@ -3,7 +3,7 @@ import { Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { SecurityBackground } from '@/components/security-background'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -44,7 +44,13 @@ export default function RootLayout({
       <body className={`${poppins.className} font-sans antialiased`}>
         <SecurityBackground />
         <div className="relative z-10">{children}</div>
-        <Toaster richColors position="top-center" />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            className:
+              'rounded-xl border border-border bg-popover text-popover-foreground shadow-lg shadow-accent/10',
+          }}
+        />
         <Analytics />
       </body>
     </html>
