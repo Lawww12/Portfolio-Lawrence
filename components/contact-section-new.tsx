@@ -57,18 +57,20 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
 
       if (res.status === 503) {
         openMailto(data.email, formData.name, formData.email, formData.message)
-        toast.info('Opened your email app', {
-          description:
-            'Add WEB3FORMS_ACCESS_KEY to .env for direct delivery from the site. See api/contact route.',
+        toast.info('Opening your email app…', {
+          description: 'Your message is pre-filled. Press send to deliver it.',
         })
         setFormData({ name: '', email: '', message: '' })
         return
       }
 
-      const payload = (await res.json()) as { ok?: boolean; error?: string }
+      const contentType = res.headers.get('content-type') ?? ''
+      const payload = contentType.includes('application/json')
+        ? ((await res.json()) as { ok?: boolean; error?: string })
+        : { error: await res.text() }
 
       if (!res.ok) {
-        toast.error(payload.error ?? 'Something went wrong')
+        toast.error((payload as { error?: string }).error ?? 'Something went wrong')
         return
       }
 
@@ -76,9 +78,10 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
         description: 'Thanks — you should hear back soon.',
       })
       setFormData({ name: '', email: '', message: '' })
-    } catch {
-      toast.error('Network error', {
-        description: 'Check your connection and try again.',
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : null
+      toast.error('Could not send message', {
+        description: msg ?? 'Please try again in a moment.',
       })
     } finally {
       setSubmitting(false)
