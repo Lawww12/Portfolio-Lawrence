@@ -44,18 +44,13 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
   const [submitting, setSubmitting] = useState(false)
 
   const { head, mid, domain } = splitEmailForReveal(data.email)
+  const web3formsKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (res.status === 503) {
+      if (!web3formsKey) {
         openMailto(data.email, formData.name, formData.email, formData.message)
         toast.info('Opening your email app…', {
           description: 'Your message is pre-filled. Press send to deliver it.',
@@ -64,13 +59,26 @@ export function ContactSection({ data = contactData }: ContactSectionProps) {
         return
       }
 
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_key: web3formsKey,
+          subject: `Portfolio contact from ${formData.name}`,
+          botcheck: false,
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      })
+
       const contentType = res.headers.get('content-type') ?? ''
       const payload = contentType.includes('application/json')
-        ? ((await res.json()) as { ok?: boolean; error?: string })
-        : { error: await res.text() }
+        ? ((await res.json()) as { success?: boolean; message?: string })
+        : ({ success: false, message: await res.text() } as { success?: boolean; message?: string })
 
-      if (!res.ok) {
-        toast.error((payload as { error?: string }).error ?? 'Something went wrong')
+      if (!res.ok || !payload.success) {
+        toast.error(payload.message ?? 'Could not send message')
         return
       }
 
